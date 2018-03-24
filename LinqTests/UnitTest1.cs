@@ -4,6 +4,7 @@ using LinqTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using NSubstitute;
 
 namespace LinqTests
@@ -170,6 +171,19 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
+        [TestMethod]
+        public void take_while_employee()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = WithoutLinq.CashTakeWhile(employees, 2, a => a.MonthSalary > 150);
+            var expected = new List<Employee>()
+            {
+                new Employee {Name = "Kevin", Role = RoleType.Manager, MonthSalary = 380, Age = 55, WorkingYear = 2.6},
+                new Employee {Name = "Bas", Role = RoleType.Engineer, MonthSalary = 280, Age = 36, WorkingYear = 2.6},
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
         [Ignore]
         [TestMethod]
         public void sum_monthsalary()
@@ -285,6 +299,27 @@ internal static class WithoutLinq
             }
 
             index++;
+        }
+    }
+
+    public static IEnumerable<TSource> CashTakeWhile<TSource>(IEnumerable<TSource> source, int count,
+        Func<TSource, bool> predicate)
+    {
+        int index = 0;
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (index >= count)
+            {
+                yield break;
+            }
+
+            if (predicate(enumerator.Current))
+            {
+                yield return enumerator.Current;
+                index++;
+            }
         }
     }
 }
