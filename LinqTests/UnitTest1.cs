@@ -33,6 +33,29 @@ namespace LinqTests
         }
 
         [TestMethod]
+        public void find_employee_that_age_more_30()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.FindProductByPrice(e => e.Age > 30);
+
+            var expected = new List<Employee>()
+            {
+                new Employee {Name = "Joe", Role = RoleType.Engineer, MonthSalary = 100, Age = 44, WorkingYear = 2.6},
+                new Employee {Name = "Tom", Role = RoleType.Engineer, MonthSalary = 140, Age = 33, WorkingYear = 2.6},
+                new Employee {Name = "Kevin", Role = RoleType.Manager, MonthSalary = 380, Age = 55, WorkingYear = 2.6},
+                new Employee {Name = "Bas", Role = RoleType.Engineer, MonthSalary = 280, Age = 36, WorkingYear = 2.6},
+                new Employee {Name = "Joey", Role = RoleType.Engineer, MonthSalary = 250, Age = 40, WorkingYear = 2.6},
+            };
+
+            //foreach (var item in actual)
+            //{
+            //    Console.WriteLine(item.Price);
+            //}
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
         public void find_products_using_where_that_price_between_200_and_500()
         {
             var products = RepositoryFactory.GetProducts();
@@ -52,7 +75,8 @@ namespace LinqTests
 
 internal static class WithoutLinq
 {
-    public static IEnumerable<Product> FindProductByPrice(this IEnumerable<Product> products, Func<Product, bool> predicate)
+    public static IEnumerable<T> FindProductByPrice<T>(this IEnumerable<T> products,
+        Func<T, bool> predicate)
     {
         foreach (var product in products)
         {
@@ -62,7 +86,6 @@ internal static class WithoutLinq
             }
         }
     }
-
 }
 
 internal static class YourOwnLinq
