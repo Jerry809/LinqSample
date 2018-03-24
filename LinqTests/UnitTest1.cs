@@ -113,6 +113,23 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void url_length()
+        {
+            var urls = RepositoryFactory.GetUrls();
+            IEnumerable<int> actual = WithoutLinq.UrlLength(urls);
+
+            var expected = new List<int>()
+            {
+                19,
+                20,
+                19,
+                17
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
@@ -149,6 +166,14 @@ internal static class WithoutLinq
         foreach (var url in urls)
         {
             yield return url.Replace("http://", "https://");
+        }
+    }
+
+    public static IEnumerable<int> UrlLength(IEnumerable<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            yield return url.Length;
         }
     }
 }
