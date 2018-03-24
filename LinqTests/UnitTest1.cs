@@ -184,6 +184,22 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
+        [TestMethod]
+        public void skip_while_employee()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = WithoutLinq.CashSkipWhile(employees, 3, a => a.MonthSalary < 150);
+            var expected = new List<Employee>()
+            {
+                new Employee {Name = "Kevin", Role = RoleType.Manager, MonthSalary = 380, Age = 55, WorkingYear = 2.6},
+                new Employee {Name = "Bas", Role = RoleType.Engineer, MonthSalary = 280, Age = 36, WorkingYear = 2.6},
+                new Employee {Name = "Mary", Role = RoleType.OP, MonthSalary = 180, Age = 26, WorkingYear = 2.6},
+                new Employee {Name = "Frank", Role = RoleType.Engineer, MonthSalary = 120, Age = 16, WorkingYear = 2.6},
+                new Employee {Name = "Joey", Role = RoleType.Engineer, MonthSalary = 250, Age = 40, WorkingYear = 2.6},
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
         [Ignore]
         [TestMethod]
         public void sum_monthsalary()
@@ -319,6 +335,25 @@ internal static class WithoutLinq
             {
                 yield return enumerator.Current;
                 index++;
+            }
+        }
+    }
+
+    public static IEnumerable<TSource> CashSkipWhile<TSource>(IEnumerable<TSource> source, int count,
+        Func<TSource, bool> predicate)
+    {
+        int index = 0;
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate(enumerator.Current) && index < count)
+            {
+                index++;
+            }
+            else
+            {
+                yield return enumerator.Current;
             }
         }
     }
