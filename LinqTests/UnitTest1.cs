@@ -96,6 +96,23 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void http_convert_to_https()
+        {
+            var urls = RepositoryFactory.GetUrls();
+            var actual = WithoutLinq.CovertHttpToHttps(urls);
+
+            var expected = new List<string>()
+            {
+                "https://tw.yahoo.com",
+                "https://facebook.com",
+                "https://twitter.com",
+                "https://github.com"
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
@@ -124,6 +141,14 @@ internal static class WithoutLinq
             }
 
             index++;
+        }
+    }
+
+    public static IEnumerable<string> CovertHttpToHttps(IEnumerable<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            yield return url.Replace("http://", "https://");
         }
     }
 }
