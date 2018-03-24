@@ -143,6 +143,32 @@ namespace LinqTests
             };
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void get_employee_2()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = WithoutLinq.CashTake(employees, 2);
+            var expected = new List<Employee>()
+            {
+                new Employee {Name = "Joe", Role = RoleType.Engineer, MonthSalary = 100, Age = 44, WorkingYear = 2.6},
+                new Employee {Name = "Tom", Role = RoleType.Engineer, MonthSalary = 140, Age = 33, WorkingYear = 2.6},
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void skip_employee()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = WithoutLinq.CashSkip(employees, 6);
+            var expected = new List<Employee>()
+            {
+                new Employee {Name = "Frank", Role = RoleType.Engineer, MonthSalary = 120, Age = 16, WorkingYear = 2.6},
+                new Employee {Name = "Joey", Role = RoleType.Engineer, MonthSalary = 250, Age = 40, WorkingYear = 2.6},
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
@@ -188,6 +214,40 @@ internal static class WithoutLinq
         foreach (var item in source)
         {
             yield return selector(item);
+        }
+    }
+
+    public static IEnumerable<TSource> CashTake<TSource>(IEnumerable<TSource> employees, int count)
+    {
+        int index = 0;
+        var enumerator = employees.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (index >= count)
+            {
+                yield break;
+            }
+
+            yield return enumerator.Current;
+
+            index++;
+        }
+    }
+
+    public static IEnumerable<Employee> CashSkip(IEnumerable<Employee> employees, int count)
+    {
+        int index = 0;
+        var enumerator = employees.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (index >= count)
+            {
+                yield return enumerator.Current;
+            }
+
+            index++;
         }
     }
 }
