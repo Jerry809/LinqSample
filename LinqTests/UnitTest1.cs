@@ -169,6 +169,21 @@ namespace LinqTests
             };
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [Ignore]
+        [TestMethod]
+        public void sum_monthsalary()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = WithoutLinq.CashSum(employees, 3);
+            var expected = new List<int>()
+            {
+                620,
+                540,
+                370
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
@@ -245,6 +260,28 @@ internal static class WithoutLinq
             if (index >= count)
             {
                 yield return enumerator.Current;
+            }
+
+            index++;
+        }
+    }
+
+    public static IEnumerable<int> CashSum(IEnumerable<Employee> employees, int count)
+    {
+        int sum = 0;
+        int index = 1;
+        var enumerator = employees.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            sum += enumerator.Current.MonthSalary;
+
+            if (index == count)
+            {
+                yield return sum;
+                sum = 0;
+                sum += enumerator.Current.MonthSalary;
+                index = 1;
             }
 
             index++;
