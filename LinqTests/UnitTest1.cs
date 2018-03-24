@@ -15,7 +15,7 @@ namespace LinqTests
         public void find_products_that_price_between_200_and_500()
         {
             var products = RepositoryFactory.GetProducts();
-            var actual = products.FindProductByPrice(product => product.Price > 200 && product.Price < 500);
+            var actual = products.Find(product => product.Price > 200 && product.Price < 500);
 
             var expected = new List<Product>()
             {
@@ -36,7 +36,7 @@ namespace LinqTests
         public void find_employee_that_age_more_30()
         {
             var employees = RepositoryFactory.GetEmployees();
-            var actual = employees.FindProductByPrice(e => e.Age > 30);
+            var actual = employees.Find(e => e.Age > 30);
 
             var expected = new List<Employee>()
             {
@@ -59,7 +59,7 @@ namespace LinqTests
         public void find_employee_that_age_more_30_item_index_more_2()
         {
             var employees = RepositoryFactory.GetEmployees();
-            var actual = employees.FindProductByPrice((e, idx) => e.Age > 30 && idx >= 2);
+            var actual = employees.Find((e, idx) => e.Age > 30 && idx >= 2);
 
             var expected = new List<Employee>()
             {
@@ -118,7 +118,7 @@ namespace LinqTests
         public void url_length()
         {
             var urls = RepositoryFactory.GetUrls();
-            IEnumerable<int> actual = WithoutLinq.UrlLength(urls, url => url.Length);
+            IEnumerable<int> actual = WithoutLinq.Map(urls, url => url.Length);
 
             var expected = new List<int>()
             {
@@ -130,12 +130,25 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void employee_age_more_25_return_role_name()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.Find(a => a.Age < 25).Map(a => $"{a.Role}:{a.Name}");
+            var expected = new List<string>()
+            {
+                "OP:Andy",
+                "Engineer:Frank"
+            };
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
 internal static class WithoutLinq
 {
-    public static IEnumerable<T> FindProductByPrice<T>(this IEnumerable<T> products, Func<T, bool> predicate)
+    public static IEnumerable<T> Find<T>(this IEnumerable<T> products, Func<T, bool> predicate)
     {
         foreach (var product in products)
         {
@@ -146,7 +159,7 @@ internal static class WithoutLinq
         }
     }
 
-    public static IEnumerable<T> FindProductByPrice<T>(this IEnumerable<T> products, Func<T, int, bool> predicate)
+    public static IEnumerable<T> Find<T>(this IEnumerable<T> products, Func<T, int, bool> predicate)
     {
         var index = 0;
 
@@ -169,7 +182,7 @@ internal static class WithoutLinq
         }
     }
 
-    public static IEnumerable<TResult> UrlLength<TSource, TResult>(IEnumerable<TSource> source,
+    public static IEnumerable<TResult> Map<TSource, TResult>(this IEnumerable<TSource> source,
         Func<TSource, TResult> selector)
     {
         foreach (var item in source)
