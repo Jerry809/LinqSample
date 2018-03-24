@@ -118,7 +118,7 @@ namespace LinqTests
         public void url_length()
         {
             var urls = RepositoryFactory.GetUrls();
-            IEnumerable<int> actual = WithoutLinq.UrlLength(urls);
+            IEnumerable<int> actual = WithoutLinq.UrlLength(urls, url => url.Length);
 
             var expected = new List<int>()
             {
@@ -169,11 +169,12 @@ internal static class WithoutLinq
         }
     }
 
-    public static IEnumerable<int> UrlLength(IEnumerable<string> urls)
+    public static IEnumerable<TResult> UrlLength<TSource, TResult>(IEnumerable<TSource> source,
+        Func<TSource, TResult> selector)
     {
-        foreach (var url in urls)
+        foreach (var item in source)
         {
-            yield return url.Length;
+            yield return selector(item);
         }
     }
 }
@@ -203,6 +204,15 @@ internal static class YourOwnLinq
             }
 
             index++;
+        }
+    }
+
+    public static IEnumerable<TResult> CashSelect<TSource, TResult>(this IEnumerable<TSource> source,
+        Func<TSource, TResult> selector)
+    {
+        foreach (var item in source)
+        {
+            yield return selector(item);
         }
     }
 }
