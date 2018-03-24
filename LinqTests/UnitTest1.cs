@@ -135,7 +135,7 @@ namespace LinqTests
         public void employee_age_more_25_return_role_name()
         {
             var employees = RepositoryFactory.GetEmployees();
-            var actual = employees.Find(a => a.Age < 25).Map(a => $"{a.Role}:{a.Name}");
+            var actual = employees.CashWhere(a => a.Age < 25).CashSelect(a => $"{a.Role}:{a.Name}");
             var expected = new List<string>()
             {
                 "OP:Andy",
