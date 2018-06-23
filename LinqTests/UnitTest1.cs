@@ -2,6 +2,7 @@
 using ExpectedObjects;
 using LinqTests;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Xunit;
 
@@ -237,6 +238,24 @@ namespace LinqTests
             
             Assert.True(employees.CashAny());
         }
+        
+        [Fact]
+        public void TestAll()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.False(WithoutLinq.CashAll(employees, a => a.MonthSalary > 200));
+            
+            Assert.False(employees.CashAll(a => a.MonthSalary > 200));
+        }
+        
+        [Fact]
+        public void TestAllisTrue()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.True(WithoutLinq.CashAll(employees, a => a.MonthSalary > 0));
+            
+            Assert.True(employees.CashAll(a => a.MonthSalary > 0));
+        }
     }
 }
 
@@ -401,6 +420,21 @@ internal static class WithoutLinq
         var enumerator = source.GetEnumerator();
         return enumerator.MoveNext();
     }
+
+    public static bool CashAll<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (!func.Invoke(enumerator.Current))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 internal static class YourOwnLinq
@@ -457,5 +491,20 @@ internal static class YourOwnLinq
     {
         var enumerator = source.GetEnumerator();
         return enumerator.MoveNext();
+    }
+
+    public static bool CashAll<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (!predicate.Invoke(enumerator.Current))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
