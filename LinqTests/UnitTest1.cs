@@ -322,7 +322,8 @@ namespace LinqTests
         {
             var employees = RepositoryFactory.GetEmployees();
 
-            Assert.Throws<InvalidOperationException>(() => WithoutLinq.CashSingle(employees, a => a.Role == RoleType.Engineer));
+            Assert.Throws<InvalidOperationException>(() =>
+                WithoutLinq.CashSingle(employees, a => a.Role == RoleType.Engineer));
             Assert.Throws<InvalidOperationException>(() => employees.CashSingle(a => a.Role == RoleType.Engineer));
         }
 
@@ -333,6 +334,20 @@ namespace LinqTests
 
             Assert.Null(WithoutLinq.CashSingleOrDefault(employees, a => a.Role == RoleType.Engineer));
             Assert.Null(employees.CashSingleOrDefault(a => a.Role == RoleType.Engineer));
+        }
+
+        [Fact]
+        public void TestDistinct()
+        {
+            var expected = new List<Employee>
+            {
+                new Employee {Name = "Joe", Role = RoleType.Engineer, MonthSalary = 100, Age = 44, WorkingYear = 2.6},
+                new Employee {Name = "Kevin", Role = RoleType.Manager, MonthSalary = 380, Age = 55, WorkingYear = 2.6},
+                new Employee {Name = "Andy", Role = RoleType.OP, MonthSalary = 80, Age = 22, WorkingYear = 2.6},
+            }.ToExpectedObject();
+            
+            expected.ShouldEqual(WithoutLinq.CashDistinct(RepositoryFactory.GetEmployees(), new MyCompareRole()).ToList());     
+            expected.ShouldEqual(RepositoryFactory.GetEmployees().CashDistinct(new MyCompareRole()).ToList());     
         }
     }
 }
@@ -599,6 +614,21 @@ internal static class WithoutLinq
 
         return e;
     }
+
+    public static IEnumerable<TSource> CashDistinct<TSource>(IEnumerable<TSource> source, IEqualityComparer<TSource> myCompare = null)
+    {
+        var compare = myCompare ?? EqualityComparer<TSource>.Default;
+        var hashSet = new HashSet<TSource>(compare);
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (hashSet.Add(enumerator.Current))
+            {
+                yield return enumerator.Current;
+            }
+        }
+    }
 }
 
 internal static class YourOwnLinq
@@ -730,7 +760,7 @@ internal static class YourOwnLinq
 
         return e;
     }
-    
+
     public static TSource CashSingleOrDefault<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
     {
         var enumerator = source.GetEnumerator();
@@ -758,5 +788,33 @@ internal static class YourOwnLinq
         }
 
         return e;
+    }
+
+    public static IEnumerable<TSource> CashDistinct<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> myComparer = null)
+    {
+        var comparer = myComparer ?? EqualityComparer<TSource>.Default;
+        var enumerator = source.GetEnumerator();
+        var hashSet = new HashSet<TSource>(comparer);
+
+        while (enumerator.MoveNext())
+        {
+            if (hashSet.Add(enumerator.Current))
+            {
+                yield return enumerator.Current;
+            }
+        }
+    }
+}
+
+public class MyCompareRole : IEqualityComparer<Employee>
+{
+    public bool Equals(Employee x, Employee y)
+    {
+        return x.Role == y.Role;
+    }
+
+    public int GetHashCode(Employee obj)
+    {
+        return obj.Role.GetHashCode();
     }
 }
