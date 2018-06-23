@@ -3,16 +3,19 @@ using ExpectedObjects;
 using LinqTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using NSubstitute;
+using Xunit;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace LinqTests
 {
-    [TestClass]
     public class UnitTest1
     {
-        [TestMethod]
+        [Fact]
         public void find_products_that_price_between_200_and_500()
         {
             var products = RepositoryFactory.GetProducts();
@@ -33,7 +36,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void find_employee_that_age_more_30()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -56,7 +59,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void find_employee_that_age_more_30_item_index_more_2()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -82,7 +85,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void find_products_using_where_that_price_between_200_and_500()
         {
             var products = RepositoryFactory.GetProducts();
@@ -98,7 +101,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void http_convert_to_https()
         {
             var urls = RepositoryFactory.GetUrls();
@@ -115,7 +118,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void url_length()
         {
             var urls = RepositoryFactory.GetUrls();
@@ -132,7 +135,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void employee_age_more_25_return_role_name()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -145,7 +148,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void get_employee_2()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -158,7 +161,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void skip_employee()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -171,7 +174,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void take_while_employee()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -184,7 +187,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [TestMethod]
+        [Fact]
         public void skip_while_employee()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -201,7 +204,7 @@ namespace LinqTests
         }
 
         [Ignore]
-        [TestMethod]
+        [Fact]
         public void sum_monthsalary()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -213,6 +216,33 @@ namespace LinqTests
                 370
             };
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [Fact]
+        public void TestAny()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.IsFalse(WithoutLinq.CashAny(employees, a => a.MonthSalary > 500));
+            
+            Assert.IsFalse(employees.CashAny(a => a.MonthSalary > 500));
+        }
+        
+        [Fact]
+        public void TestAnyIsTrue()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.IsTrue(WithoutLinq.CashAny(employees, a => a.MonthSalary < 500));
+            
+            Assert.IsTrue(employees.CashAny(a => a.MonthSalary < 500));
+        }
+        
+        [Fact]
+        public void TestAny_not_any_condition()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.IsTrue(WithoutLinq.CashAny(employees));
+            
+            Assert.IsTrue(employees.CashAny());
         }
     }
 }
@@ -357,6 +387,27 @@ internal static class WithoutLinq
             }
         }
     }
+
+    public static bool CashAny<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (func.Invoke(enumerator.Current))
+            {
+                return true;
+            }
+        } 
+        
+        return false;
+    }
+
+    public static bool CashAny<TSource>(IEnumerable<TSource> source)
+    {
+        var enumerator = source.GetEnumerator();
+        return enumerator.MoveNext();
+    }
 }
 
 internal static class YourOwnLinq
@@ -394,5 +445,24 @@ internal static class YourOwnLinq
         {
             yield return selector(item);
         }
+    }
+
+    public static bool CashAny<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        foreach (var item in source)
+        {
+            if (predicate(item))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool CashAny<TSource>(this IEnumerable<TSource> source)
+    {
+        var enumerator = source.GetEnumerator();
+        return enumerator.MoveNext();
     }
 }
