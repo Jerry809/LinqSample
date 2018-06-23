@@ -218,37 +218,37 @@ namespace LinqTests
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.False(WithoutLinq.CashAny(employees, a => a.MonthSalary > 500));
-            
+
             Assert.False(employees.CashAny(a => a.MonthSalary > 500));
         }
-        
+
         [Fact]
         public void TestAnyIsTrue()
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.True(WithoutLinq.CashAny(employees, a => a.MonthSalary < 500));
-            
+
             Assert.True(employees.CashAny(a => a.MonthSalary < 500));
         }
-        
+
         [Fact]
         public void TestAny_not_any_condition()
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.True(WithoutLinq.CashAny(employees));
-            
+
             Assert.True(employees.CashAny());
         }
-        
+
         [Fact]
         public void TestAll()
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.False(WithoutLinq.CashAll(employees, a => a.MonthSalary > 200));
-            
+
             Assert.False(employees.CashAll(a => a.MonthSalary > 200));
         }
-        
+
         [Fact]
         public void TestAllisTrue()
         {
@@ -256,27 +256,83 @@ namespace LinqTests
             Assert.True(WithoutLinq.CashAll(employees, a => a.MonthSalary > 0));
             Assert.True(employees.CashAll(a => a.MonthSalary > 0));
         }
-        
+
         [Fact]
         public void TestFirstOrDefault()
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.Equal("Kevin", WithoutLinq.CashFirstOrDefault(employees, a => a.MonthSalary > 200).Name);
             Assert.Null(WithoutLinq.CashFirstOrDefault(employees, a => a.MonthSalary > 500));
-            
+
             Assert.Equal("Kevin", employees.CashFirstOrDefault(a => a.MonthSalary > 200).Name);
             Assert.Null(employees.CashFirstOrDefault(a => a.MonthSalary > 500));
         }
-        
+
         [Fact]
         public void TestFirst()
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.Equal("Kevin", WithoutLinq.CashFirst(employees, a => a.MonthSalary > 200).Name);
             Assert.Throws<ArgumentNullException>(() => WithoutLinq.CashFirst(employees, a => a.MonthSalary > 500));
-            
+
             Assert.Equal("Kevin", employees.CashFirst(a => a.MonthSalary > 200).Name);
             Assert.Throws<ArgumentNullException>(() => employees.CashFirst(a => a.MonthSalary > 500));
+        }
+
+        [Fact]
+        public void TestSinge()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.Equal(RoleType.Manager, WithoutLinq.CashSingle(employees, a => a.Role == RoleType.Manager).Role);
+
+            Assert.Equal(RoleType.Manager, employees.CashSingle(a => a.Role == RoleType.Manager).Role);
+        }
+
+        [Fact]
+        public void TestSingeOrDefault()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.Equal(RoleType.Manager,
+                WithoutLinq.CashSingleOrDefault(employees, a => a.Role == RoleType.Manager).Role);
+
+            Assert.Equal(RoleType.Manager, employees.CashSingleOrDefault(a => a.Role == RoleType.Manager).Role);
+        }
+
+        [Fact]
+        public void TestSingle_not_data()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+
+            Assert.Throws<InvalidOperationException>(() =>
+                WithoutLinq.CashSingle(employees, a => a.Role == RoleType.Unknown));
+            Assert.Throws<InvalidOperationException>(() => employees.CashSingle(a => a.Role == RoleType.Unknown));
+        }
+
+        [Fact]
+        public void TestSingleOrDefault_not_data()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+
+            Assert.Null(WithoutLinq.CashSingleOrDefault(employees, a => a.Role == RoleType.Unknown));
+            Assert.Null(employees.CashSingleOrDefault(a => a.Role == RoleType.Unknown));
+        }
+
+        [Fact]
+        public void TestSingle_more_then_one_data()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+
+            Assert.Throws<InvalidOperationException>(() => WithoutLinq.CashSingle(employees, a => a.Role == RoleType.Engineer));
+            Assert.Throws<InvalidOperationException>(() => employees.CashSingle(a => a.Role == RoleType.Engineer));
+        }
+
+        [Fact]
+        public void TestSingleOrDefault_more_then_one_data()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+
+            Assert.Null(WithoutLinq.CashSingleOrDefault(employees, a => a.Role == RoleType.Engineer));
+            Assert.Null(employees.CashSingleOrDefault(a => a.Role == RoleType.Engineer));
         }
     }
 }
@@ -432,8 +488,8 @@ internal static class WithoutLinq
             {
                 return true;
             }
-        } 
-        
+        }
+
         return false;
     }
 
@@ -484,8 +540,64 @@ internal static class WithoutLinq
                 return enumerator.Current;
             }
         }
-        
+
         throw new ArgumentNullException();
+    }
+
+    public static TSource CashSingle<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        var e = default(TSource);
+        var idx = 0;
+        while (enumerator.MoveNext())
+        {
+            if (func.Invoke(enumerator.Current))
+            {
+                e = enumerator.Current;
+                idx++;
+            }
+
+            if (idx > 1)
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        if (idx == 0)
+        {
+            throw new InvalidOperationException();
+        }
+
+        return e;
+    }
+
+    public static TSource CashSingleOrDefault<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        var e = default(TSource);
+        var idx = 0;
+        while (enumerator.MoveNext())
+        {
+            if (func.Invoke(enumerator.Current))
+            {
+                e = enumerator.Current;
+                idx++;
+            }
+
+            if (idx > 1)
+            {
+                return default(TSource);
+            }
+        }
+
+        if (idx == 0)
+        {
+            return default(TSource);
+        }
+
+        return e;
     }
 }
 
@@ -574,7 +686,7 @@ internal static class YourOwnLinq
 
         return default(TSource);
     }
-    
+
     public static TSource CashFirst<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
     {
         var enumerator = source.GetEnumerator();
@@ -588,5 +700,63 @@ internal static class YourOwnLinq
         }
 
         throw new ArgumentNullException();
+    }
+
+    public static TSource CashSingle<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        var enumerator = source.GetEnumerator();
+
+        var e = default(TSource);
+        var idx = 0;
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate.Invoke(enumerator.Current))
+            {
+                e = enumerator.Current;
+                idx++;
+            }
+
+            if (idx > 1)
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        if (idx == 0)
+        {
+            throw new InvalidOperationException();
+        }
+
+        return e;
+    }
+    
+    public static TSource CashSingleOrDefault<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        var enumerator = source.GetEnumerator();
+
+        var e = default(TSource);
+        var idx = 0;
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate.Invoke(enumerator.Current))
+            {
+                e = enumerator.Current;
+                idx++;
+            }
+
+            if (idx > 1)
+            {
+                return default(TSource);
+            }
+        }
+
+        if (idx == 0)
+        {
+            return default(TSource);
+        }
+
+        return e;
     }
 }

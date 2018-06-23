@@ -2,5 +2,6 @@
 {
     Engineer,
     OP,
-    Manager
+    Manager,
+    Unknown
 }
