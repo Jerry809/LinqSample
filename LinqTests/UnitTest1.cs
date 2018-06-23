@@ -349,6 +349,45 @@ namespace LinqTests
             expected.ShouldEqual(WithoutLinq.CashDistinct(RepositoryFactory.GetEmployees(), new MyCompareRole()).ToList());     
             expected.ShouldEqual(RepositoryFactory.GetEmployees().CashDistinct(new MyCompareRole()).ToList());     
         }
+        
+        [Fact]
+        public void TestDefaultIfEmpty_not_data()
+        {
+            var defaultInput = new Employee
+            {
+                Name = "Cash"
+            };
+            
+            var expected = new List<Employee>
+            {
+                defaultInput
+            };
+
+            var younger = RepositoryFactory.GetEmployees().Where(a => a.Age <= 15);
+
+            expected.ToExpectedObject().ShouldEqual(WithoutLinq.CashDefaultIfEmpty(younger, defaultInput).ToList());
+            expected.ToExpectedObject().ShouldEqual(younger.CashDefaultIfEmpty(defaultInput).ToList());
+        }
+
+        [Fact]
+        public void TestDefaultIfEmpty_have_data()
+        {
+            var defaultInput = new Employee
+            {
+                Name = "Cash"
+            };
+            
+            var expected = new List<Employee>
+            {
+                new Employee {Name = "Joe", Role = RoleType.Engineer, MonthSalary = 100, Age = 44, WorkingYear = 2.6},
+                new Employee {Name = "Kevin", Role = RoleType.Manager, MonthSalary = 380, Age = 55, WorkingYear = 2.6},
+            }; 
+            
+            var younger = RepositoryFactory.GetEmployees().Where(a => a.Age > 40);
+
+            expected.ToExpectedObject().ShouldEqual(WithoutLinq.CashDefaultIfEmpty(younger, defaultInput).ToList());
+            expected.ToExpectedObject().ShouldEqual(younger.CashDefaultIfEmpty(defaultInput).ToList());
+        }
     }
 }
 
@@ -629,6 +668,24 @@ internal static class WithoutLinq
             }
         }
     }
+
+    public static IEnumerable<TSource> CashDefaultIfEmpty<TSource>(IEnumerable<TSource> source, TSource defaultInput) 
+    {
+        var enumerator = source.GetEnumerator();
+
+        if (!enumerator.MoveNext())
+        {
+            yield return defaultInput;
+            yield break;
+        }
+
+        yield return enumerator.Current;
+        
+        while (enumerator.MoveNext())
+        {
+            yield return enumerator.Current;
+        } 
+    }
 }
 
 internal static class YourOwnLinq
@@ -802,6 +859,23 @@ internal static class YourOwnLinq
             {
                 yield return enumerator.Current;
             }
+        }
+    }
+
+    public static IEnumerable<TSource> CashDefaultIfEmpty<TSource>(this IEnumerable<TSource> source, TSource defaultInput)
+    {
+        var enumerator = source.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            yield return defaultInput;
+            yield break;
+        }
+
+        yield return enumerator.Current;
+        
+        while (enumerator.MoveNext())
+        {
+            yield return enumerator.Current;
         }
     }
 }
