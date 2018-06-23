@@ -1,15 +1,9 @@
 ﻿using System;
 using ExpectedObjects;
 using LinqTests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Security.Cryptography.X509Certificates;
-using NSubstitute;
 using Xunit;
-using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace LinqTests
 {
@@ -203,8 +197,7 @@ namespace LinqTests
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
 
-        [Ignore]
-        [Fact]
+        [Fact(Skip = "not completed")]
         public void sum_monthsalary()
         {
             var employees = RepositoryFactory.GetEmployees();
@@ -222,27 +215,27 @@ namespace LinqTests
         public void TestAny()
         {
             var employees = RepositoryFactory.GetEmployees();
-            Assert.IsFalse(WithoutLinq.CashAny(employees, a => a.MonthSalary > 500));
+            Assert.False(WithoutLinq.CashAny(employees, a => a.MonthSalary > 500));
             
-            Assert.IsFalse(employees.CashAny(a => a.MonthSalary > 500));
+            Assert.False(employees.CashAny(a => a.MonthSalary > 500));
         }
         
         [Fact]
         public void TestAnyIsTrue()
         {
             var employees = RepositoryFactory.GetEmployees();
-            Assert.IsTrue(WithoutLinq.CashAny(employees, a => a.MonthSalary < 500));
+            Assert.True(WithoutLinq.CashAny(employees, a => a.MonthSalary < 500));
             
-            Assert.IsTrue(employees.CashAny(a => a.MonthSalary < 500));
+            Assert.True(employees.CashAny(a => a.MonthSalary < 500));
         }
         
         [Fact]
         public void TestAny_not_any_condition()
         {
             var employees = RepositoryFactory.GetEmployees();
-            Assert.IsTrue(WithoutLinq.CashAny(employees));
+            Assert.True(WithoutLinq.CashAny(employees));
             
-            Assert.IsTrue(employees.CashAny());
+            Assert.True(employees.CashAny());
         }
     }
 }
