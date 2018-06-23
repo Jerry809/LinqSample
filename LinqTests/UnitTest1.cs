@@ -2,6 +2,7 @@
 using ExpectedObjects;
 using LinqTests;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Xunit;
@@ -253,8 +254,29 @@ namespace LinqTests
         {
             var employees = RepositoryFactory.GetEmployees();
             Assert.True(WithoutLinq.CashAll(employees, a => a.MonthSalary > 0));
-            
             Assert.True(employees.CashAll(a => a.MonthSalary > 0));
+        }
+        
+        [Fact]
+        public void TestFirstOrDefault()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.Equal("Kevin", WithoutLinq.CashFirstOrDefault(employees, a => a.MonthSalary > 200).Name);
+            Assert.Null(WithoutLinq.CashFirstOrDefault(employees, a => a.MonthSalary > 500));
+            
+            Assert.Equal("Kevin", employees.CashFirstOrDefault(a => a.MonthSalary > 200).Name);
+            Assert.Null(employees.CashFirstOrDefault(a => a.MonthSalary > 500));
+        }
+        
+        [Fact]
+        public void TestFirst()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            Assert.Equal("Kevin", WithoutLinq.CashFirst(employees, a => a.MonthSalary > 200).Name);
+            Assert.Throws<ArgumentNullException>(() => WithoutLinq.CashFirst(employees, a => a.MonthSalary > 500));
+            
+            Assert.Equal("Kevin", employees.CashFirst(a => a.MonthSalary > 200).Name);
+            Assert.Throws<ArgumentNullException>(() => employees.CashFirst(a => a.MonthSalary > 500));
         }
     }
 }
@@ -435,6 +457,36 @@ internal static class WithoutLinq
 
         return true;
     }
+
+    public static TSource CashFirstOrDefault<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (func.Invoke(enumerator.Current))
+            {
+                return enumerator.Current;
+            }
+        }
+
+        return default(TSource);
+    }
+
+    public static TSource CashFirst<TSource>(IEnumerable<TSource> source, Func<TSource, bool> func)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (func.Invoke(enumerator.Current))
+            {
+                return enumerator.Current;
+            }
+        }
+        
+        throw new ArgumentNullException();
+    }
 }
 
 internal static class YourOwnLinq
@@ -506,5 +558,35 @@ internal static class YourOwnLinq
         }
 
         return true;
+    }
+
+    public static TSource CashFirstOrDefault<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate.Invoke(enumerator.Current))
+            {
+                return enumerator.Current;
+            }
+        }
+
+        return default(TSource);
+    }
+    
+    public static TSource CashFirst<TSource>(this IEnumerable<TSource> source, Predicate<TSource> predicate)
+    {
+        var enumerator = source.GetEnumerator();
+
+        while (enumerator.MoveNext())
+        {
+            if (predicate.Invoke(enumerator.Current))
+            {
+                return enumerator.Current;
+            }
+        }
+
+        throw new ArgumentNullException();
     }
 }
