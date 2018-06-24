@@ -315,4 +315,32 @@ internal static class WithoutLinq
 
         return false;
     }
+
+    public static bool CashSequence<TSource>(IEnumerable<TSource> source, IEnumerable<TSource> anotherSource, IEqualityComparer<TSource> comparer)
+    {
+        var myComparer = comparer ?? EqualityComparer<TSource>.Default;
+        
+        var enumerator = source.GetEnumerator();
+        var anotherEnumerator = anotherSource.GetEnumerator();
+
+        while (true)
+        {
+            var sourceHaveNext = enumerator.MoveNext();
+            var anotherSourceHaveNext = anotherEnumerator.MoveNext();
+
+            if (sourceHaveNext && anotherSourceHaveNext)
+            {
+                if (!myComparer.Equals(enumerator.Current, anotherEnumerator.Current))
+                {
+                    return false;
+                } 
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return enumerator.Current == null && anotherEnumerator.Current == null;
+    }
 }

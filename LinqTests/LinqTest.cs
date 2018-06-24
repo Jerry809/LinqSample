@@ -419,6 +419,46 @@ namespace LinqTests
             
             Assert.False(products.CashContain(product, new MyCompareProduct()));
         }
+
+        [Fact]
+        public void TestSequence_item_have_one_not_equal()
+        {
+            var products = RepositoryFactory.GetProducts();
+            var anotherProducts = RepositoryFactory.GetAnotherProducts();
+            
+            Assert.False(WithoutLinq.CashSequence(products, anotherProducts, new MyCompareProduct()));
+            Assert.False(products.CashSequence(anotherProducts, new MyCompareProduct()));
+        }
+        
+        [Fact]
+        public void TestSequence_item_more_than_one()
+        {
+            var products = RepositoryFactory.GetProducts();
+            var anotherProducts = RepositoryFactory.GetProductsS();
+            
+            Assert.False(WithoutLinq.CashSequence(products, anotherProducts, new MyCompareProduct()));
+            Assert.False(products.CashSequence(anotherProducts, new MyCompareProduct()));
+        }
+        
+        [Fact]
+        public void TestSequence_equal()
+        {
+            var products = RepositoryFactory.GetProducts();
+            var anotherProducts = RepositoryFactory.GetProducts();
+            
+            Assert.True(WithoutLinq.CashSequence(products, anotherProducts, new MyCompareProduct()));
+            Assert.True(products.CashSequence(anotherProducts, new MyCompareProduct()));
+        }
+        
+        [Fact]
+        public void TestSequence_source_more_than_one()
+        {
+            var products = RepositoryFactory.GetProductsS();
+            var anotherProducts = RepositoryFactory.GetProducts();
+            
+            Assert.False(WithoutLinq.CashSequence(products, anotherProducts, new MyCompareProduct()));
+            Assert.False(products.CashSequence(anotherProducts, new MyCompareProduct()));
+        }
     }
 }
 

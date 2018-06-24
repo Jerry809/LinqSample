@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 internal static class YourOwnLinq
 {
@@ -194,7 +195,7 @@ internal static class YourOwnLinq
         }
     }
 
-    public static bool CashContain<TSource>(this IEnumerable<TSource> source, TSource item, IEqualityComparer<TSource> comparer)
+    public static bool CashContain<TSource>(this IEnumerable<TSource> source, TSource item, IEqualityComparer<TSource> comparer = null)
     {
         var myComparer = comparer ?? EqualityComparer<TSource>.Default;
 
@@ -209,5 +210,33 @@ internal static class YourOwnLinq
         }
 
         return false;
+    }
+
+    public static bool CashSequence<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> anotherSource, IEqualityComparer<TSource> comparer = null)
+    {
+        var myComparer = comparer ?? EqualityComparer<TSource>.Default;
+
+        var sourceEnumerator = source.GetEnumerator();
+        var anotherEnumerator = anotherSource.GetEnumerator();
+
+        while (true)
+        {
+            var sourceMoveNext = sourceEnumerator.MoveNext();
+            var anotherSourceMoveNext = anotherEnumerator.MoveNext();
+            
+            if (sourceMoveNext && anotherSourceMoveNext)
+            {
+                if (!myComparer.Equals(sourceEnumerator.Current, anotherEnumerator.Current))
+                {
+                    return false;
+                }
+            } 
+            else
+            {
+               break;
+            }
+        }
+
+        return sourceEnumerator.Current == null && anotherEnumerator.Current == null;
     }
 }
